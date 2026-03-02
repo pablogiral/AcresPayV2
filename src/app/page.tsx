@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { auth } from "@/auth";
 import { MenuCard } from "@/components/menu-card";
+import { PublicAuthPanel } from "@/components/public-auth-panel";
 
 export default async function HomePage() {
   const session = await auth().catch(() => null);
@@ -8,18 +8,7 @@ export default async function HomePage() {
   const hasGitHubAuth = Boolean(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET);
 
   if (!session?.user) {
-    return (
-      <section className="card" style={{ padding: "2rem", textAlign: "center" }}>
-        <h1 style={{ marginTop: 0, fontSize: "2rem" }}>AcresPay</h1>
-        <p style={{ color: "#475569" }}>Divide cuentas de forma fácil</p>
-
-        <div style={{ display: "flex", gap: "0.6rem", justifyContent: "center", flexWrap: "wrap", marginTop: "1rem" }}>
-          {hasGoogleAuth ? <Link className="btn btn-primary" href="/api/auth/signin/google">Entrar con Google</Link> : null}
-          {hasGitHubAuth ? <Link className="btn" href="/api/auth/signin/github">Entrar con GitHub</Link> : null}
-          <Link className="btn" href="/register">Crear cuenta email</Link>
-        </div>
-      </section>
-    );
+    return <PublicAuthPanel hasGoogleAuth={hasGoogleAuth} hasGitHubAuth={hasGitHubAuth} />;
   }
 
   return (
