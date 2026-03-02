@@ -35,14 +35,26 @@ export function PublicAuthPanel({ hasGoogleAuth, hasGitHubAuth }: Props) {
     window.location.href = "/";
   }
 
+  async function handleSocialSignIn(provider: "google" | "github") {
+    await signIn(provider, { redirectTo: "/" });
+  }
+
   return (
     <section className="card" style={{ padding: "2rem", textAlign: "center" }}>
       <h1 style={{ marginTop: 0, fontSize: "2rem" }}>AcresPay</h1>
       <p style={{ color: "#475569" }}>Divide cuentas de forma fácil</p>
 
       <div style={{ display: "flex", gap: "0.6rem", justifyContent: "center", flexWrap: "wrap", marginTop: "1rem" }}>
-        {hasGoogleAuth ? <Link className="btn btn-primary" href="/api/auth/signin/google">Entrar con Google</Link> : null}
-        {hasGitHubAuth ? <Link className="btn" href="/api/auth/signin/github">Entrar con GitHub</Link> : null}
+        {hasGoogleAuth ? (
+          <button className="btn btn-primary" type="button" onClick={() => void handleSocialSignIn("google")}>
+            Entrar con Google
+          </button>
+        ) : null}
+        {hasGitHubAuth ? (
+          <button className="btn" type="button" onClick={() => void handleSocialSignIn("github")}>
+            Entrar con GitHub
+          </button>
+        ) : null}
         <Link className="btn" href="/register">Crear cuenta email</Link>
       </div>
 

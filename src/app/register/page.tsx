@@ -28,7 +28,14 @@ export default function RegisterPage() {
       return;
     }
 
-    await signIn("credentials", { email, password, redirectTo: "/" });
+    const result = await signIn("credentials", { email, password, redirect: false });
+    if (result?.error) {
+      setError("La cuenta se creó, pero no se pudo iniciar sesión");
+      setLoading(false);
+      return;
+    }
+
+    window.location.href = "/";
   };
 
   return (
