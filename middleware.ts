@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "./src/auth";
-import { PROTECTED_PATHS } from "./src/lib/constants";
 
 export default auth(async (req) => {
-  const isProtected = PROTECTED_PATHS.some((path) => req.nextUrl.pathname.startsWith(path));
-  if (!isProtected) {
-    return NextResponse.next();
-  }
-
   if (!req.auth?.user) {
     const url = new URL("/", req.url);
     return NextResponse.redirect(url);
@@ -17,5 +11,12 @@ export default auth(async (req) => {
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"]
+  matcher: [
+    "/friends/:path*",
+    "/my-bills/:path*",
+    "/bill/:path*",
+    "/settlement/:path*",
+    "/combine-tickets/:path*",
+    "/combined-settlement/:path*"
+  ]
 };

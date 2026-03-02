@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { MenuCard } from "@/components/menu-card";
 
 export default async function HomePage() {
-  const session = await auth();
+  const session = await auth().catch(() => null);
   const hasGoogleAuth = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
   const hasGitHubAuth = Boolean(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET);
 

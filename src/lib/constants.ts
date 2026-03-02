@@ -10,12 +10,3 @@ export const FRIEND_COLORS = [
   "blue",
   "indigo"
 ] as const;
-
-export const PROTECTED_PATHS = [
-  "/friends",
-  "/my-bills",
-  "/bill",
-  "/settlement",
-  "/combine-tickets",
-  "/combined-settlement"
-] as const;
