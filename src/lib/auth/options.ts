@@ -44,15 +44,26 @@ const providers: NonNullable<NextAuthConfig["providers"]> = [
 ];
 
 if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
-  providers.unshift(Google);
+  providers.unshift(
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET
+    })
+  );
 }
 
 if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
-  providers.unshift(GitHub);
+  providers.unshift(
+    GitHub({
+      clientId: process.env.AUTH_GITHUB_ID,
+      clientSecret: process.env.AUTH_GITHUB_SECRET
+    })
+  );
 }
 
 export const authConfig = {
   adapter: DrizzleAdapter(db),
+  trustHost: true,
   pages: {
     signIn: "/"
   },
