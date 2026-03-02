@@ -53,6 +53,9 @@ npm run dev
 - Callback Auth.js: `https://tu-dominio.vercel.app/api/auth/callback/google` y `/github`
 4. Despliega.
 
+Guía detallada paso a paso:
+- `docs/DEPLOY_VERCEL.md`
+
 ## Notas
 - Importes monetarios en centavos (`integer`) para evitar errores de redondeo.
 - El nombre del ticket se actualiza en `onBlur` para evitar llamadas por cada tecla.
