@@ -1,0 +1,1 @@
+ALTER TABLE "friends" DROP CONSTRAINT "friends_user_color_unique";

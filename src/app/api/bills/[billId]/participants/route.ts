@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { bills, participants } from "@/lib/db/schema";
+import { bills, friends, participants } from "@/lib/db/schema";
 import { jsonError, jsonOk, requireUserId } from "@/lib/api";
 import { makeId } from "@/lib/id";
 import { addParticipantSchema } from "@/lib/validators/bills";
@@ -24,6 +24,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ bil
   const parsed = addParticipantSchema.safeParse(body);
   if (!parsed.success) {
     return jsonError("Datos inválidos", 400);
+  }
+
+  if (parsed.data.friendId) {
+    const friend = await db.query.friends.findFirst({
+      where: and(eq(friends.id, parsed.data.friendId), eq(friends.userId, authCheck.userId))
+    });
+
+    if (!friend) {
+      return jsonError("Amigo no encontrado", 404);
+    }
+
+    const existingParticipant = await db.query.participants.findFirst({
+      where: and(eq(participants.billId, billId), eq(participants.friendId, parsed.data.friendId))
+    });
+
+    if (existingParticipant) {
+      return jsonError("Ese amigo ya está añadido a este ticket", 409);
+    }
   }
 
   const created = await db

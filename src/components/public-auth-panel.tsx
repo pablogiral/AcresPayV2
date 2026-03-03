@@ -6,10 +6,9 @@ import { signIn } from "next-auth/react";
 
 type Props = {
   hasGoogleAuth: boolean;
-  hasGitHubAuth: boolean;
 };
 
-export function PublicAuthPanel({ hasGoogleAuth, hasGitHubAuth }: Props) {
+export function PublicAuthPanel({ hasGoogleAuth }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -40,46 +39,59 @@ export function PublicAuthPanel({ hasGoogleAuth, hasGitHubAuth }: Props) {
   }
 
   return (
-    <section className="card" style={{ padding: "2rem", textAlign: "center" }}>
-      <h1 style={{ marginTop: 0, fontSize: "2rem" }}>AcresPay</h1>
-      <p style={{ color: "#475569" }}>Divide cuentas de forma fácil</p>
-
-      <div style={{ display: "flex", gap: "0.6rem", justifyContent: "center", flexWrap: "wrap", marginTop: "1rem" }}>
-        {hasGoogleAuth ? (
-          <button className="btn btn-primary" type="button" onClick={() => void handleSocialSignIn("google")}>
-            Entrar con Google
-          </button>
-        ) : null}
-        {hasGitHubAuth ? (
-          <button className="btn" type="button" onClick={() => void handleSocialSignIn("github")}>
-            Entrar con GitHub
-          </button>
-        ) : null}
-        <Link className="btn" href="/register">Crear cuenta email</Link>
+    <section className="hero-grid">
+      <div className="card hero-panel">
+        <p className="eyebrow">Controla gastos compartidos</p>
+        <h1 className="hero-title">Divide, ajusta y liquida sin hojas de cálculo.</h1>
+        <p className="hero-copy">
+          AcresPay convierte una cuenta caótica en pasos claros: quién estuvo, qué pidió cada uno y quién debe pagar a quién.
+        </p>
+        <div className="hero-points">
+          <span className="metric-pill">Tickets editables</span>
+          <span className="metric-pill">Participantes con color</span>
+          <span className="metric-pill">Liquidación clara</span>
+        </div>
       </div>
 
-      <form onSubmit={handleCredentialsSignIn} style={{ display: "grid", gap: "0.8rem", maxWidth: 420, margin: "1.25rem auto 0" }}>
-        <input
-          className="input"
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          className="input"
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        {error ? <p style={{ color: "#b91c1c", margin: 0 }}>{error}</p> : null}
-        <button className="btn" disabled={loading} type="submit">
-          {loading ? "Entrando..." : "Entrar con email"}
-        </button>
-      </form>
+      <div className="card auth-card">
+        <div>
+          <p className="eyebrow">Acceso</p>
+          <h2 style={{ marginTop: 0, marginBottom: "0.35rem" }}>Entra a tu espacio</h2>
+          <p className="subtle">Usa Google o tu cuenta por email y contraseña.</p>
+        </div>
+
+        <div className="auth-actions">
+          {hasGoogleAuth ? (
+            <button className="btn btn-primary" type="button" onClick={() => void handleSocialSignIn("google")}>
+              Entrar con Google
+            </button>
+          ) : null}
+          <Link className="btn" href="/register">Crear cuenta email</Link>
+        </div>
+
+        <form onSubmit={handleCredentialsSignIn} className="auth-form">
+          <input
+            className="input"
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            className="input"
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          {error ? <p className="error-text">{error}</p> : null}
+          <button className="btn" disabled={loading} type="submit">
+            {loading ? "Entrando..." : "Entrar con email"}
+          </button>
+        </form>
+      </div>
     </section>
   );
 }

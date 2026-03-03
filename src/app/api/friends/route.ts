@@ -1,7 +1,7 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { friends } from "@/lib/db/schema";
+import { bills, friends, participants } from "@/lib/db/schema";
 import { jsonError, jsonOk, requireUserId } from "@/lib/api";
 import { makeId } from "@/lib/id";
 import { createFriendSchema } from "@/lib/validators/friends";
@@ -17,7 +17,49 @@ export async function GET() {
     orderBy: [asc(friends.createdAt)]
   });
 
-  return jsonOk({ friends: list });
+  if (list.length === 0) {
+    return jsonOk({ friends: [] });
+  }
+
+  const usageRows = await db
+    .select({
+      friendId: participants.friendId,
+      usageCount: sql<number>`count(*)`,
+      lastUsedAt: sql<string>`max(${bills.date})`
+    })
+    .from(participants)
+    .innerJoin(bills, eq(participants.billId, bills.id))
+    .where(
+      and(
+        eq(bills.userId, authCheck.userId),
+        inArray(
+          participants.friendId,
+          list.map((friend) => friend.id)
+        )
+      )
+    )
+    .groupBy(participants.friendId)
+    .orderBy(desc(sql`max(${bills.date})`));
+
+  const usageByFriendId = new Map(
+    usageRows
+      .filter((row): row is { friendId: string; usageCount: number; lastUsedAt: string } => Boolean(row.friendId))
+      .map((row) => [
+        row.friendId,
+        {
+          usageCount: Number(row.usageCount ?? 0),
+          lastUsedAt: row.lastUsedAt
+        }
+      ])
+  );
+
+  return jsonOk({
+    friends: list.map((friend) => ({
+      ...friend,
+      usageCount: usageByFriendId.get(friend.id)?.usageCount ?? 0,
+      lastUsedAt: usageByFriendId.get(friend.id)?.lastUsedAt ?? null
+    }))
+  });
 }
 
 export async function POST(req: NextRequest) {
@@ -30,14 +72,6 @@ export async function POST(req: NextRequest) {
   const parsed = createFriendSchema.safeParse(body);
   if (!parsed.success) {
     return jsonError("Datos inválidos", 400);
-  }
-
-  const existingColor = await db.query.friends.findFirst({
-    where: and(eq(friends.userId, authCheck.userId), eq(friends.color, parsed.data.color))
-  });
-
-  if (existingColor) {
-    return jsonError("Ese color ya está asignado a otro amigo", 409);
   }
 
   const created = await db

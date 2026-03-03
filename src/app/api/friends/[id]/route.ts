@@ -26,16 +26,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return jsonError("Amigo no encontrado", 404);
   }
 
-  if (parsed.data.color && parsed.data.color !== friend.color) {
-    const existingColor = await db.query.friends.findFirst({
-      where: and(eq(friends.userId, authCheck.userId), eq(friends.color, parsed.data.color))
-    });
-
-    if (existingColor) {
-      return jsonError("Ese color ya está en uso", 409);
-    }
-  }
-
   const updated = await db
     .update(friends)
     .set({

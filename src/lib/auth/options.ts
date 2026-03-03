@@ -4,6 +4,7 @@ import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/lib/db";
+import { withUserIdOnSession, withUserIdOnToken } from "@/lib/auth/session-helpers";
 import { accounts, sessions, users, verificationTokens } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -75,15 +76,15 @@ export const authConfig = {
     signIn: "/"
   },
   session: {
-    strategy: "database"
+    strategy: "jwt"
   },
   providers,
   callbacks: {
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
-      }
-      return session;
+    async jwt({ token, user }) {
+      return withUserIdOnToken(token, user);
+    },
+    async session({ session, token }) {
+      return withUserIdOnSession(session, token);
     }
   },
   events: {
