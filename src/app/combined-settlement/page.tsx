@@ -31,6 +31,8 @@ export default async function CombinedSettlementPage({ searchParams }: Props) {
   }
 
   const aggregated = new Map<string, number>();
+  const labels = new Map<string, string>();
+  let beforeTransfersCount = 0;
 
   for (const bill of ownedBills) {
     if (!bill.payerParticipantId) {
@@ -54,6 +56,7 @@ export default async function CombinedSettlementPage({ searchParams }: Props) {
       claims: billClaims,
       payerParticipantId: bill.payerParticipantId
     });
+    beforeTransfersCount += result.transfers.length;
 
     for (const balance of result.balances) {
       const participant = billParticipants.find((x) => x.id === balance.participantId);
@@ -62,12 +65,30 @@ export default async function CombinedSettlementPage({ searchParams }: Props) {
       const key = participant.friendId
         ? `friend:${participant.friendId}`
         : `name:${participant.name.trim().toLowerCase()}|color:${participant.color}`;
+      if (!labels.has(key)) {
+        labels.set(key, participant.name);
+      }
       aggregated.set(key, (aggregated.get(key) ?? 0) + balance.amountCents);
     }
   }
 
-  const totals = [...aggregated.entries()].map(([key, balanceCents]) => ({ key, balanceCents }));
+  const totals = [...aggregated.entries()].map(([key, balanceCents]) => ({
+    key,
+    label: labels.get(key) ?? key,
+    balanceCents
+  }));
   const combined = calculateCombinedSettlement(totals);
 
-  return <CombinedSettlementClient totals={totals} transfers={combined.transfers} />;
+  return (
+    <CombinedSettlementClient
+      totals={totals}
+      transfers={combined.transfers.map((transfer) => ({
+        ...transfer,
+        fromLabel: labels.get(transfer.fromKey) ?? transfer.fromKey,
+        toLabel: labels.get(transfer.toKey) ?? transfer.toKey
+      }))}
+      beforeTransfersCount={beforeTransfersCount}
+      selectedBillsCount={ownedBills.length}
+    />
+  );
 }

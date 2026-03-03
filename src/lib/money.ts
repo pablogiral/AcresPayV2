@@ -12,3 +12,17 @@ export function formatCurrency(cents: number): string {
     currency: "EUR"
   }).format(fromCents(cents));
 }
+
+export function parseCurrencyInput(value: string): number | null {
+  const normalized = value.replace(",", ".").trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const amount = Number.parseFloat(normalized);
+  if (!Number.isFinite(amount) || amount < 0) {
+    return null;
+  }
+
+  return toCents(amount);
+}

@@ -72,10 +72,7 @@ export const friends = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull()
   },
-  (table) => [
-    unique("friends_user_color_unique").on(table.userId, table.color),
-    index("friends_user_idx").on(table.userId)
-  ]
+  (table) => [index("friends_user_idx").on(table.userId)]
 );
 
 export const bills = pgTable(

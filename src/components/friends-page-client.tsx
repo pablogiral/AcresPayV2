@@ -1,22 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { FRIEND_COLORS } from "@/lib/constants";
+import { useEffect, useState } from "react";
+import { ColorChip } from "@/components/color-chip";
+import { pickRandomFriendColor } from "@/lib/constants";
 
 type Friend = {
   id: string;
   name: string;
   color: string;
+  usageCount: number;
+  lastUsedAt: string | null;
 };
 
 export function FriendsPageClient() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [name, setName] = useState("");
-  const [color, setColor] = useState<string>(FRIEND_COLORS[0]);
+  const [color, setColor] = useState<string>(() => pickRandomFriendColor());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const taken = useMemo(() => new Set(friends.map((f) => f.color)), [friends]);
 
   async function load() {
     const res = await fetch("/api/friends");
@@ -48,6 +49,7 @@ export function FriendsPageClient() {
     }
 
     setName("");
+    setColor(pickRandomFriendColor(color));
     await load();
     setSaving(false);
   }
@@ -93,46 +95,57 @@ export function FriendsPageClient() {
   }
 
   return (
-    <section style={{ display: "grid", gap: "1rem" }}>
-      <div className="card">
+    <section className="page-stack">
+      <div className="card card-hero">
         <h1 style={{ marginTop: 0 }}>Amigos</h1>
-        <p style={{ color: "#64748b" }}>Guarda participantes frecuentes con color único.</p>
+        <p className="subtle">Guarda participantes frecuentes, reutilízalos más rápido y reconoce a cada uno de un vistazo.</p>
 
         <form onSubmit={createFriend} className="grid-auto" style={{ alignItems: "end" }}>
-          <label>
+          <label className="field-stack">
             <span>Nombre</span>
             <input className="input" value={name} onChange={(e) => setName(e.target.value)} required />
           </label>
 
-          <label>
-            <span>Color</span>
-            <select className="input" value={color} onChange={(e) => setColor(e.target.value)}>
-              {FRIEND_COLORS.map((c) => (
-                <option key={c} value={c} disabled={taken.has(c)}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="field-stack">
+            <span>Etiqueta</span>
+            <div className="inline-row">
+              <ColorChip color={color} label="Nuevo" />
+              <button className="btn" type="button" onClick={() => setColor(pickRandomFriendColor(color))}>
+                Otro tono
+              </button>
+            </div>
+          </div>
 
           <button className="btn btn-primary" disabled={saving} type="submit">
-            {saving ? "Guardando..." : "Agregar"}
+            {saving ? "Guardando..." : "Agregar amigo"}
           </button>
         </form>
 
-        {error ? <p style={{ color: "#b91c1c" }}>{error}</p> : null}
+        {error ? <p className="error-text">{error}</p> : null}
       </div>
 
       <div className="card">
         <h2 style={{ marginTop: 0 }}>Lista</h2>
-        {friends.length === 0 ? <p style={{ color: "#64748b" }}>Aún no tienes amigos guardados.</p> : null}
+        {friends.length === 0 ? (
+          <div className="section-empty" style={{ marginBottom: "0.9rem" }}>
+            <strong>Aún no tienes amigos guardados.</strong>
+            <p className="subtle">Guárdalos aquí y luego podrás añadirlos a un ticket con un solo toque, sin dejar de poder escribir nombres nuevos al vuelo.</p>
+          </div>
+        ) : null}
 
-        <div style={{ display: "grid", gap: "0.65rem" }}>
+        <div style={{ display: "grid", gap: "0.9rem" }}>
           {friends.map((friend) => (
-            <div key={friend.id} style={{ display: "grid", gap: "0.45rem", border: "1px solid #e2e8f0", borderRadius: 12, padding: "0.6rem" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.6rem" }}>
-                <strong>{friend.name}</strong>
-                <span className="badge">{friend.color}</span>
+            <div key={friend.id} className="panel-row">
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", flexWrap: "wrap" }}>
+                <div>
+                  <strong>{friend.name}</strong>
+                  <p className="subtle" style={{ margin: "0.25rem 0 0" }}>
+                    {friend.usageCount > 0
+                      ? `Usado en ${friend.usageCount} ticket${friend.usageCount === 1 ? "" : "s"}${friend.lastUsedAt ? ` · Último uso ${new Date(friend.lastUsedAt).toLocaleDateString("es-ES")}` : ""}`
+                      : "Aún no se ha usado en ningún ticket."}
+                  </p>
+                </div>
+                <ColorChip color={friend.color} />
               </div>
 
               <div className="grid-auto" style={{ alignItems: "center" }}>
@@ -145,14 +158,10 @@ export function FriendsPageClient() {
                     }
                   }}
                 />
-                <select className="input" value={friend.color} onChange={(e) => void recolorFriend(friend.id, e.target.value)}>
-                  {FRIEND_COLORS.map((c) => (
-                    <option key={`${friend.id}-${c}`} value={c} disabled={c !== friend.color && taken.has(c)}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-                <button className="btn" type="button" onClick={() => void removeFriend(friend.id)}>Eliminar</button>
+                <button className="btn" type="button" onClick={() => void recolorFriend(friend.id, pickRandomFriendColor(friend.color))}>
+                  Nuevo color
+                </button>
+                <button className="btn btn-danger" type="button" onClick={() => void removeFriend(friend.id)}>Eliminar</button>
               </div>
             </div>
           ))}

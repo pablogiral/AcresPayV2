@@ -16,18 +16,29 @@ export function CombineTicketsClient({ bills }: { bills: Bill[] }) {
   const router = useRouter();
 
   const total = useMemo(() => bills.filter((b) => selected.includes(b.id)).reduce((acc, b) => acc + b.totalCents, 0), [bills, selected]);
+  const estimatedReview = selected.length >= 2
+    ? `Vas a comparar ${selected.length} tickets y ver cuántos pagos puedes ahorrarte antes de cerrar.`
+    : "Selecciona al menos dos tickets para calcular el ahorro real de pagos.";
 
   return (
-    <section className="card">
-      <h1 style={{ marginTop: 0 }}>Combinar Tickets</h1>
-      <p style={{ color: "#64748b" }}>Selecciona dos o más tickets para optimizar transferencias.</p>
+    <section className="card card-hero">
+      <p className="eyebrow">Optimización</p>
+      <h1 style={{ marginTop: 0, marginBottom: "0.35rem" }}>Combinar Tickets</h1>
+      <p className="subtle">Selecciona dos o más tickets para simplificar pagos cruzados y ver el ahorro antes de cerrar.</p>
 
-      <div style={{ display: "grid", gap: "0.5rem" }}>
+      {bills.length === 0 ? (
+        <div className="section-empty">
+          <strong>Todavía no tienes tickets para combinar.</strong>
+          <p className="subtle">Crea al menos dos tickets y aquí podrás reducir pagos repetidos entre las mismas personas.</p>
+        </div>
+      ) : null}
+
+      <div style={{ display: "grid", gap: "0.7rem" }}>
         {bills.map((bill) => (
-          <label key={bill.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.6rem", border: "1px solid #e2e8f0", borderRadius: 12, padding: "0.7rem" }}>
+          <label key={bill.id} className="panel-row" style={{ gridTemplateColumns: "1fr auto" }}>
             <div>
               <strong>{bill.name}</strong>
-              <p style={{ margin: 0, color: "#64748b" }}>{new Date(bill.date).toLocaleDateString("es-ES")}</p>
+              <p className="subtle" style={{ marginTop: "0.25rem" }}>{new Date(bill.date).toLocaleDateString("es-ES")}</p>
             </div>
             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
               <span>{formatCurrency(bill.totalCents)}</span>
@@ -45,8 +56,11 @@ export function CombineTicketsClient({ bills }: { bills: Bill[] }) {
         ))}
       </div>
 
-      <div style={{ marginTop: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <strong>Total seleccionado: {formatCurrency(total)}</strong>
+      <div className="action-bar" style={{ marginTop: "1rem" }}>
+        <div>
+          <strong>Total seleccionado: {formatCurrency(total)}</strong>
+          <p className="subtle" style={{ marginTop: "0.35rem" }}>{estimatedReview}</p>
+        </div>
         <button
           className="btn btn-primary"
           disabled={selected.length < 2}

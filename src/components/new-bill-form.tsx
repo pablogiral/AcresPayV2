@@ -32,9 +32,10 @@ export function NewBillForm() {
   }
 
   return (
-    <section className="card" style={{ maxWidth: 640 }}>
-      <h1 style={{ marginTop: 0 }}>Nuevo Ticket</h1>
-      <p style={{ color: "#64748b" }}>Crea el ticket y después añade participantes e items.</p>
+    <section className="card card-hero" style={{ maxWidth: 720 }}>
+      <p className="eyebrow">Nuevo ticket</p>
+      <h1 style={{ marginTop: 0, marginBottom: "0.35rem" }}>Empieza un gasto nuevo</h1>
+      <p className="subtle">Crea el ticket y después añade participantes, items y reparto.</p>
       <form onSubmit={onSubmit} style={{ display: "grid", gap: "0.8rem" }}>
         <input
           className="input"
@@ -43,7 +44,7 @@ export function NewBillForm() {
           onChange={(e) => setName(e.target.value)}
           required
         />
-        {error ? <p style={{ color: "#b91c1c", margin: 0 }}>{error}</p> : null}
+        {error ? <p className="error-text">{error}</p> : null}
         <button className="btn btn-primary" disabled={loading} type="submit">
           {loading ? "Creando..." : "Crear ticket"}
         </button>
