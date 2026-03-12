@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
       userId: authCheck.userId,
       name: parsed.data.name,
       date: new Date(),
+      isClosed: false,
       totalCents: 0,
       createdAt: new Date(),
       updatedAt: new Date()

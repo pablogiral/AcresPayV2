@@ -42,6 +42,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ bill
   if (!bill) {
     return jsonError("Ticket no encontrado", 404);
   }
+  if (bill.isClosed) {
+    return jsonError("El ticket está cerrado. Reábrelo para editarlo.", 409);
+  }
 
   const body = await req.json().catch(() => null);
   const parsed = paymentSchema.safeParse(body);

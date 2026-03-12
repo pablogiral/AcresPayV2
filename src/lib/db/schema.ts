@@ -75,6 +75,32 @@ export const friends = pgTable(
   (table) => [index("friends_user_idx").on(table.userId)]
 );
 
+export const gangs = pgTable(
+  "gangs",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull()
+  },
+  (table) => [index("gangs_user_idx").on(table.userId)]
+);
+
+export const gangMembers = pgTable(
+  "gang_members",
+  {
+    gangId: text("gang_id").notNull().references(() => gangs.id, { onDelete: "cascade" }),
+    friendId: text("friend_id").notNull().references(() => friends.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull()
+  },
+  (table) => [
+    primaryKey({ columns: [table.gangId, table.friendId] }),
+    index("gang_members_gang_idx").on(table.gangId),
+    index("gang_members_friend_idx").on(table.friendId)
+  ]
+);
+
 export const bills = pgTable(
   "bills",
   {
@@ -83,6 +109,7 @@ export const bills = pgTable(
     name: text("name").notNull(),
     date: timestamp("date", { mode: "date" }).defaultNow().notNull(),
     payerParticipantId: text("payer_participant_id"),
+    isClosed: boolean("is_closed").notNull().default(false),
     totalCents: integer("total_cents").notNull().default(0),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull()
@@ -159,6 +186,7 @@ export const payments = pgTable(
 
 export const usersRelations = relations(users, ({ many }) => ({
   friends: many(friends),
+  gangs: many(gangs),
   bills: many(bills),
   sessions: many(sessions),
   accounts: many(accounts)
@@ -179,7 +207,27 @@ export const friendsRelations = relations(friends, ({ one, many }) => ({
     fields: [friends.userId],
     references: [users.id]
   }),
-  participants: many(participants)
+  participants: many(participants),
+  gangMembers: many(gangMembers)
+}));
+
+export const gangsRelations = relations(gangs, ({ one, many }) => ({
+  user: one(users, {
+    fields: [gangs.userId],
+    references: [users.id]
+  }),
+  members: many(gangMembers)
+}));
+
+export const gangMembersRelations = relations(gangMembers, ({ one }) => ({
+  gang: one(gangs, {
+    fields: [gangMembers.gangId],
+    references: [gangs.id]
+  }),
+  friend: one(friends, {
+    fields: [gangMembers.friendId],
+    references: [friends.id]
+  })
 }));
 
 export const participantsRelations = relations(participants, ({ one, many }) => ({
@@ -239,3 +287,4 @@ export type LineItem = typeof lineItems.$inferSelect;
 export type Claim = typeof claims.$inferSelect;
 export type Payment = typeof payments.$inferSelect;
 export type Friend = typeof friends.$inferSelect;
+export type Gang = typeof gangs.$inferSelect;

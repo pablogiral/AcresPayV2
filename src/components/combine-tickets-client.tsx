@@ -9,6 +9,7 @@ type Bill = {
   name: string;
   totalCents: number;
   date: string;
+  hasPaidPayments: boolean;
 };
 
 export function CombineTicketsClient({ bills }: { bills: Bill[] }) {
@@ -16,6 +17,7 @@ export function CombineTicketsClient({ bills }: { bills: Bill[] }) {
   const router = useRouter();
 
   const total = useMemo(() => bills.filter((b) => selected.includes(b.id)).reduce((acc, b) => acc + b.totalCents, 0), [bills, selected]);
+  const blockedSelectedCount = selected.filter((id) => bills.find((bill) => bill.id === id)?.hasPaidPayments).length;
   const estimatedReview = selected.length >= 2
     ? `Vas a comparar ${selected.length} tickets y ver cuántos pagos puedes ahorrarte antes de cerrar.`
     : "Selecciona al menos dos tickets para calcular el ahorro real de pagos.";
@@ -39,12 +41,18 @@ export function CombineTicketsClient({ bills }: { bills: Bill[] }) {
             <div>
               <strong>{bill.name}</strong>
               <p className="subtle" style={{ marginTop: "0.25rem" }}>{new Date(bill.date).toLocaleDateString("es-ES")}</p>
+              {bill.hasPaidPayments ? (
+                <p className="subtle" style={{ marginTop: "0.25rem", color: "#9a3412" }}>
+                  Este ticket ya tiene pagos iniciados y no se puede combinar.
+                </p>
+              ) : null}
             </div>
             <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
               <span>{formatCurrency(bill.totalCents)}</span>
               <input
                 type="checkbox"
                 checked={selected.includes(bill.id)}
+                disabled={bill.hasPaidPayments}
                 onChange={(e) => {
                   setSelected((prev) =>
                     e.target.checked ? [...prev, bill.id] : prev.filter((id) => id !== bill.id)
@@ -63,7 +71,7 @@ export function CombineTicketsClient({ bills }: { bills: Bill[] }) {
         </div>
         <button
           className="btn btn-primary"
-          disabled={selected.length < 2}
+          disabled={selected.length < 2 || blockedSelectedCount > 0}
           onClick={() => router.push(`/combined-settlement?bills=${selected.join(",")}`)}
         >
           Ver liquidación combinada
