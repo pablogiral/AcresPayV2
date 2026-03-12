@@ -1,7 +1,8 @@
 import { and, eq, sql } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { bills, lineItems } from "@/lib/db/schema";
+import { bills, claims, lineItems, participants } from "@/lib/db/schema";
+import { resetBillPayments } from "@/lib/db/payments";
 import { jsonError, jsonOk, requireUserId } from "@/lib/api";
 import { makeId } from "@/lib/id";
 import { addLineItemSchema } from "@/lib/validators/bills";
@@ -21,13 +22,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ bil
     return jsonError("Ticket no encontrado", 404);
   }
 
+  if (bill.isClosed) {
+    return jsonError("El ticket está cerrado. Reábrelo para editarlo.", 409);
+  }
+
   const body = await req.json().catch(() => null);
   const parsed = addLineItemSchema.safeParse(body);
   if (!parsed.success) {
     return jsonError("Datos inválidos", 400);
   }
 
-  const totalPriceCents = parsed.data.quantity * parsed.data.unitPriceCents;
+  const totalPriceCents = parsed.data.totalPriceCents;
+  const unitPriceCents =
+    parsed.data.quantity > 0 ? Math.round(totalPriceCents / parsed.data.quantity) : totalPriceCents;
 
   const created = await db
     .insert(lineItems)
@@ -36,13 +43,34 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ bil
       billId,
       description: parsed.data.description,
       quantity: parsed.data.quantity,
-      unitPriceCents: parsed.data.unitPriceCents,
+      unitPriceCents,
       totalPriceCents,
       isShared: parsed.data.isShared,
       createdAt: new Date(),
       updatedAt: new Date()
     })
     .returning();
+  const createdItem = created[0];
+
+  if (createdItem?.isShared) {
+    const billParticipants = await db.query.participants.findMany({
+      where: eq(participants.billId, billId)
+    });
+
+    if (billParticipants.length > 0) {
+      await db.insert(claims).values(
+        billParticipants.map((participant) => ({
+          id: makeId("clm"),
+          lineItemId: createdItem.id,
+          participantId: participant.id,
+          quantity: 1,
+          isShared: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }))
+      );
+    }
+  }
 
   await db
     .update(bills)
@@ -52,5 +80,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ bil
     })
     .where(eq(bills.id, billId));
 
-  return jsonOk({ item: created[0] }, 201);
+  await resetBillPayments(billId);
+
+  return jsonOk({ item: createdItem }, 201);
 }

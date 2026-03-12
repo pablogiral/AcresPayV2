@@ -22,9 +22,11 @@ export default async function MyBillsPage() {
   return (
     <section className="page-stack">
       <div className="card card-hero">
-        <p className="eyebrow">Historial</p>
-        <h1 style={{ marginTop: 0, marginBottom: "0.35rem" }}>Mis Tickets</h1>
-        <p className="subtle">Reabre, corrige y liquida cualquier cuenta anterior.</p>
+        <div className="page-intro">
+          <p className="eyebrow">Historial</p>
+          <h1 className="page-title">Tus cuentas, ordenadas por estado.</h1>
+          <p className="page-copy">Lo importante aquí no es solo el importe. También si el ticket está listo, en pagos o ya cerrado.</p>
+        </div>
       </div>
       {myBills.length === 0 ? (
         <div className="card section-empty">
@@ -36,10 +38,13 @@ export default async function MyBillsPage() {
         </div>
       ) : null}
 
-      {myBills.map((bill) => {
+      <div className="dashboard-tickets">
+        {myBills.map((bill) => {
         const pendingPayments = bill.payments.filter((payment) => !payment.isPaid).length;
         const hasStructure = bill.participants.length > 0 && bill.lineItems.length > 0;
-        const status = !hasStructure
+        const status = bill.isClosed
+          ? "Cerrado"
+          : !hasStructure
           ? "Borrador"
           : !bill.payerParticipantId
             ? "Falta pagador"
@@ -50,21 +55,27 @@ export default async function MyBillsPage() {
                 : "En curso";
 
         return (
-          <Link key={bill.id} href={`/bill/${bill.id}`} className="card list-link">
-            <div>
-              <strong>{bill.name}</strong>
-              <p className="subtle" style={{ marginTop: "0.25rem" }}>{new Date(bill.date).toLocaleDateString("es-ES")}</p>
-              <div className="inline-row" style={{ marginTop: "0.55rem" }}>
+          <Link key={bill.id} href={`/bill/${bill.id}`} className={`card ticket-card ${bill.isClosed ? "ticket-closed-card" : ""}`}>
+            <div className="ticket-card-main">
+              <h2 className="ticket-card-title">{bill.name}</h2>
+              <div className="ticket-card-meta">
                 <span className="badge">{status}</span>
-                <span className="subtle">{bill.participants.length} participantes</span>
-                <span className="subtle">{bill.lineItems.length} items</span>
-                {pendingPayments > 0 ? <span className="subtle">{pendingPayments} pagos pendientes</span> : null}
+                <span className="subtle">{new Date(bill.date).toLocaleDateString("es-ES")}</span>
+              </div>
+              <div className="ticket-card-stats">
+                <span>{bill.participants.length} participantes</span>
+                <span>{bill.lineItems.length} items</span>
+                {pendingPayments > 0 ? <span>{pendingPayments} pagos pendientes</span> : <span>Sin pagos pendientes</span>}
               </div>
             </div>
-            <strong>{formatCurrency(bill.totalCents)}</strong>
+            <div className="ticket-card-total">
+              <span className="subtle">Importe</span>
+              <strong>{formatCurrency(bill.totalCents)}</strong>
+            </div>
           </Link>
         );
       })}
+      </div>
     </section>
   );
 }

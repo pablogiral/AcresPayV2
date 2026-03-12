@@ -29,9 +29,11 @@ export default async function BillPage({ params }: { params: Promise<{ billId: s
 
   return (
     <BillEditor
+      key={bill.id}
       initialBill={{
         id: bill.id,
         name: bill.name,
+        isClosed: bill.isClosed,
         totalCents: bill.totalCents,
         payerParticipantId: bill.payerParticipantId,
         participants: bill.participants,

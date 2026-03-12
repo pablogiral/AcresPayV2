@@ -2,6 +2,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { bills, lineItems, participants } from "@/lib/db/schema";
+import { resetBillPayments } from "@/lib/db/payments";
 import { jsonError, jsonOk, requireUserId } from "@/lib/api";
 import { updateBillSchema } from "@/lib/validators/bills";
 
@@ -55,6 +56,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ bi
     return jsonError("Ticket no encontrado", 404);
   }
 
+  if (existing.isClosed && parsed.data.isClosed !== false) {
+    return jsonError("El ticket está cerrado. Reábrelo para editarlo.", 409);
+  }
+
   const updated = await db
     .update(bills)
     .set({
@@ -62,10 +67,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ bi
       ...(parsed.data.payerParticipantId !== undefined
         ? { payerParticipantId: parsed.data.payerParticipantId }
         : {}),
+      ...(parsed.data.isClosed !== undefined ? { isClosed: parsed.data.isClosed } : {}),
       updatedAt: new Date()
     })
     .where(and(eq(bills.id, billId), eq(bills.userId, authCheck.userId)))
     .returning();
+
+  if (
+    parsed.data.payerParticipantId !== undefined &&
+    parsed.data.payerParticipantId !== existing.payerParticipantId
+  ) {
+    await resetBillPayments(billId);
+  }
 
   return jsonOk({ bill: updated[0] });
 }

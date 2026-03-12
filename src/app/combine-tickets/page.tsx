@@ -10,8 +10,21 @@ export default async function CombineTicketsPage() {
 
   const myBills = await db.query.bills.findMany({
     where: eq(bills.userId, session.user.id),
-    orderBy: [desc(bills.date)]
+    orderBy: [desc(bills.date)],
+    with: {
+      payments: true
+    }
   });
 
-  return <CombineTicketsClient bills={myBills.map((b) => ({ id: b.id, name: b.name, totalCents: b.totalCents, date: b.date.toISOString() }))} />;
+  return (
+    <CombineTicketsClient
+      bills={myBills.map((b) => ({
+        id: b.id,
+        name: b.name,
+        totalCents: b.totalCents,
+        date: b.date.toISOString(),
+        hasPaidPayments: b.payments.some((payment) => payment.isPaid)
+      }))}
+    />
+  );
 }

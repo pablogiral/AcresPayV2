@@ -32,6 +32,7 @@ export default async function SettlementPage({ params }: { params: Promise<{ bil
     <SettlementClient
       bill={{
         id: bill.id,
+        isClosed: bill.isClosed,
         payerParticipantId: bill.payerParticipantId,
         participants: bill.participants.map((x) => ({ id: x.id, name: x.name })),
         lineItems: bill.lineItems.map((x) => ({

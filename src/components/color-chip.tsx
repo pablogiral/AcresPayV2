@@ -3,9 +3,10 @@
 type ColorChipProps = {
   color: string;
   label?: string;
+  className?: string;
 };
 
-function getTextColor(hex: string) {
+export function getReadableTextColor(hex: string) {
   const value = hex.replace("#", "");
   const r = Number.parseInt(value.slice(0, 2), 16);
   const g = Number.parseInt(value.slice(2, 4), 16);
@@ -14,16 +15,16 @@ function getTextColor(hex: string) {
   return luminance > 150 ? "#0f172a" : "#f8fafc";
 }
 
-export function ColorChip({ color, label = "Color" }: ColorChipProps) {
+export function ColorChip({ color, label, className }: ColorChipProps) {
   return (
     <span
-      className="color-chip"
-      style={{ backgroundColor: color, color: getTextColor(color) }}
+      className={className ?? "color-chip"}
+      style={{ backgroundColor: color, color: getReadableTextColor(color) }}
       title={color}
-      aria-label={`${label}: ${color}`}
+      aria-label={label ? `${label}: ${color}` : color}
     >
       <span className="color-chip-dot" />
-      {label}
+      {label ?? null}
     </span>
   );
 }

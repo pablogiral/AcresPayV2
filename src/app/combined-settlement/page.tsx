@@ -23,11 +23,18 @@ export default async function CombinedSettlementPage({ searchParams }: Props) {
   }
 
   const ownedBills = await db.query.bills.findMany({
-    where: and(eq(bills.userId, session.user.id), inArray(bills.id, billIds))
+    where: and(eq(bills.userId, session.user.id), inArray(bills.id, billIds)),
+    with: {
+      payments: true
+    }
   });
 
   if (ownedBills.length !== billIds.length) {
     return <section className="card"><p>No tienes acceso a todos los tickets seleccionados.</p></section>;
+  }
+
+  if (ownedBills.some((bill) => bill.payments.some((payment) => payment.isPaid))) {
+    return <section className="card"><p>No puedes combinar tickets que ya tengan pagos iniciados.</p></section>;
   }
 
   const aggregated = new Map<string, number>();

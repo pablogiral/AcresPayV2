@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { formatCurrency } from "@/lib/money";
 
 type TotalRow = {
@@ -28,11 +28,34 @@ export function CombinedSettlementClient({
   beforeTransfersCount: number;
   selectedBillsCount: number;
 }) {
+  const [feedback, setFeedback] = useState<string | null>(null);
   const grandTotal = useMemo(
     () => totals.reduce((acc, row) => acc + Math.max(0, row.balanceCents), 0),
     [totals]
   );
   const reduction = Math.max(0, beforeTransfersCount - transfers.length);
+
+  async function copyTransfer(transfer: Transfer) {
+    const text = `${transfer.fromLabel} paga ${formatCurrency(transfer.amountCents)} a ${transfer.toLabel}.`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setFeedback("Pago copiado.");
+    } catch {
+      setFeedback(`Copia este texto: ${text}`);
+    }
+  }
+
+  async function copyAllTransfers() {
+    const lines = transfers.map((transfer) => `- ${transfer.fromLabel} paga ${formatCurrency(transfer.amountCents)} a ${transfer.toLabel}`);
+    const text = lines.length > 0 ? `Pagos combinados:\n${lines.join("\n")}` : "No hay pagos combinados pendientes.";
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setFeedback("Resumen combinado copiado.");
+    } catch {
+      setFeedback(`Copia este texto:\n${text}`);
+    }
+  }
 
   return (
     <section className="card card-hero" style={{ display: "grid", gap: "1rem" }}>
@@ -75,6 +98,11 @@ export function CombinedSettlementClient({
 
       <div>
         <h2 style={{ marginTop: 0 }}>Transferencias optimizadas</h2>
+        <div className="action-bar" style={{ marginBottom: "0.8rem" }}>
+          <button className="btn" type="button" onClick={() => void copyAllTransfers()}>
+            Copiar todos los pagos
+          </button>
+        </div>
         {transfers.length === 0 ? (
           <div className="section-empty">
             <strong>No hace falta ningún pago adicional.</strong>
@@ -85,12 +113,16 @@ export function CombinedSettlementClient({
             {transfers.map((t, idx) => (
               <div key={idx} className="panel-row" style={{ gridTemplateColumns: "1fr auto" }}>
                 <span>{t.fromLabel} {"->"} {t.toLabel}</span>
-                <strong>{formatCurrency(t.amountCents)}</strong>
+                <div className="inline-row">
+                  <strong>{formatCurrency(t.amountCents)}</strong>
+                  <button className="btn" type="button" onClick={() => void copyTransfer(t)}>Copiar</button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+      {feedback ? <p className="subtle" style={{ color: "var(--accent-strong)" }}>{feedback}</p> : null}
     </section>
   );
 }

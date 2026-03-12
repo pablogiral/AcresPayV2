@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { bills, friends, participants } from "@/lib/db/schema";
+import { resetBillPayments } from "@/lib/db/payments";
 import { jsonError, jsonOk, requireUserId } from "@/lib/api";
 import { makeId } from "@/lib/id";
 import { addParticipantSchema } from "@/lib/validators/bills";
@@ -18,6 +19,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ bil
   });
   if (!bill) {
     return jsonError("Ticket no encontrado", 404);
+  }
+
+  if (bill.isClosed) {
+    return jsonError("El ticket está cerrado. Reábrelo para editarlo.", 409);
   }
 
   const body = await req.json().catch(() => null);
@@ -55,6 +60,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ bil
       createdAt: new Date()
     })
     .returning();
+
+  await resetBillPayments(billId);
 
   return jsonOk({ participant: created[0] }, 201);
 }

@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { bills, claims, lineItems, participants } from "@/lib/db/schema";
+import { resetBillPayments } from "@/lib/db/payments";
 import { jsonError, jsonOk, requireUserId } from "@/lib/api";
 import { makeId } from "@/lib/id";
 import { claimSchema } from "@/lib/validators/bills";
@@ -17,7 +18,7 @@ export async function PUT(
 
   const { itemId, participantId } = await params;
   const allowed = await db
-    .select({ itemId: lineItems.id, participantId: participants.id })
+    .select({ itemId: lineItems.id, participantId: participants.id, billId: lineItems.billId, billClosed: bills.isClosed })
     .from(lineItems)
     .innerJoin(bills, eq(lineItems.billId, bills.id))
     .innerJoin(participants, eq(participants.billId, bills.id))
@@ -32,6 +33,9 @@ export async function PUT(
 
   if (!allowed[0]) {
     return jsonError("Sin permisos", 403);
+  }
+  if (allowed[0].billClosed) {
+    return jsonError("El ticket está cerrado. Reábrelo para editarlo.", 409);
   }
 
   const body = await req.json().catch(() => null);
@@ -54,6 +58,7 @@ export async function PUT(
       })
       .where(and(eq(claims.lineItemId, itemId), eq(claims.participantId, participantId)))
       .returning();
+    await resetBillPayments(allowed[0].billId);
 
     return jsonOk({ claim: updated[0] });
   }
@@ -70,6 +75,7 @@ export async function PUT(
       updatedAt: new Date()
     })
     .returning();
+  await resetBillPayments(allowed[0].billId);
 
   return jsonOk({ claim: created[0] }, 201);
 }
@@ -85,7 +91,7 @@ export async function DELETE(
 
   const { itemId, participantId } = await params;
   const allowed = await db
-    .select({ itemId: lineItems.id, participantId: participants.id })
+    .select({ itemId: lineItems.id, participantId: participants.id, billId: lineItems.billId, billClosed: bills.isClosed })
     .from(lineItems)
     .innerJoin(bills, eq(lineItems.billId, bills.id))
     .innerJoin(participants, eq(participants.billId, bills.id))
@@ -101,8 +107,12 @@ export async function DELETE(
   if (!allowed[0]) {
     return jsonError("Sin permisos", 403);
   }
+  if (allowed[0].billClosed) {
+    return jsonError("El ticket está cerrado. Reábrelo para editarlo.", 409);
+  }
 
   await db.delete(claims).where(and(eq(claims.lineItemId, itemId), eq(claims.participantId, participantId)));
+  await resetBillPayments(allowed[0].billId);
 
   return jsonOk({ ok: true });
 }

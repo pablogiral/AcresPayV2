@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { FRIEND_COLORS } from "@/lib/constants";
+
+const hexColorSchema = z.string().regex(/^#([0-9a-fA-F]{6})$/, "Color inválido");
 
 export const createBillSchema = z.object({
   name: z.string().trim().min(1).max(120)
@@ -8,23 +9,31 @@ export const createBillSchema = z.object({
 export const updateBillSchema = z
   .object({
     name: z.string().trim().min(1).max(120).optional(),
-    payerParticipantId: z.string().min(1).optional()
+    payerParticipantId: z.string().min(1).optional(),
+    isClosed: z.boolean().optional()
   })
-  .refine((data) => data.name !== undefined || data.payerParticipantId !== undefined, {
+  .refine((data) => data.name !== undefined || data.payerParticipantId !== undefined || data.isClosed !== undefined, {
     message: "Debes enviar al menos un campo"
   });
 
 export const addParticipantSchema = z.object({
   name: z.string().trim().min(1).max(80),
-  color: z.enum(FRIEND_COLORS),
+  color: hexColorSchema,
   friendId: z.string().optional()
 });
 
 export const addLineItemSchema = z.object({
   description: z.string().trim().min(1).max(160),
   quantity: z.number().int().positive(),
-  unitPriceCents: z.number().int().min(0),
+  totalPriceCents: z.number().int().min(0),
   isShared: z.boolean().default(false)
+});
+
+export const updateLineItemSchema = z.object({
+  description: z.string().trim().min(1).max(160),
+  quantity: z.number().int().positive(),
+  totalPriceCents: z.number().int().min(0),
+  isShared: z.boolean()
 });
 
 export const updateSharedSchema = z.object({

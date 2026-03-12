@@ -15,6 +15,20 @@
       "when": 1772477385824,
       "tag": "0001_elite_nehzno",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772791307312,
+      "tag": "0002_parallel_wild_child",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1772793911241,
+      "tag": "0003_careful_george_stacy",
+      "breakpoints": true
     }
   ]
 }

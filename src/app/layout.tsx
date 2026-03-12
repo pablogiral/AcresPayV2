@@ -20,13 +20,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Link href="/" className="brand-lockup">
                 <span className="brand-mark">A</span>
                 <span>
-                  <strong>AcresPay</strong>
+                  <strong style={{ fontSize: "1.05rem" }}>AcresPay</strong>
                   <span className="brand-subtitle">Split bills without chaos</span>
                 </span>
               </Link>
 
               {session?.user ? (
                 <nav className="nav-cluster">
+                  <Link className="btn btn-primary" href="/bill/new">Nuevo ticket</Link>
                   <Link className="btn" href="/friends">Amigos</Link>
                   <Link className="btn" href="/my-bills">Mis Tickets</Link>
                   <Link className="btn" href="/combine-tickets">Combinar</Link>
@@ -44,7 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </div>
         </header>
 
-        <main className="container" style={{ paddingBottom: "2.5rem" }}>{children}</main>
+        <main className="container" style={{ paddingTop: "2.1rem", paddingBottom: "2.5rem" }}>{children}</main>
       </body>
     </html>
   );

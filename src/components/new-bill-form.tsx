@@ -32,23 +32,50 @@ export function NewBillForm() {
   }
 
   return (
-    <section className="card card-hero" style={{ maxWidth: 720 }}>
-      <p className="eyebrow">Nuevo ticket</p>
-      <h1 style={{ marginTop: 0, marginBottom: "0.35rem" }}>Empieza un gasto nuevo</h1>
-      <p className="subtle">Crea el ticket y después añade participantes, items y reparto.</p>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: "0.8rem" }}>
-        <input
-          className="input"
-          placeholder="Ej: Cena viernes"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        {error ? <p className="error-text">{error}</p> : null}
-        <button className="btn btn-primary" disabled={loading} type="submit">
-          {loading ? "Creando..." : "Crear ticket"}
-        </button>
-      </form>
+    <section className="form-shell">
+      <div className="card card-hero">
+        <div className="page-intro">
+          <p className="eyebrow">Nuevo ticket</p>
+          <h1 className="page-title">Abre una cuenta nueva en menos de un minuto.</h1>
+          <p className="page-copy">Primero nombras el ticket. Después añades personas, consumos y reparto sin perder el hilo.</p>
+        </div>
+      </div>
+
+      <div className="form-sheet">
+        <div className="card">
+          <form onSubmit={onSubmit} style={{ display: "grid", gap: "0.95rem" }}>
+            <label className="field-stack">
+              <span>Nombre del ticket</span>
+              <input
+                className="input"
+                placeholder="Cena del sábado, comida de oficina, vermut..."
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </label>
+            {error ? <p className="error-text">{error}</p> : null}
+            <div className="action-bar">
+              <button className="btn btn-primary" disabled={loading} type="submit">
+                {loading ? "Creando..." : "Crear ticket"}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div className="feature-stack">
+          <div className="card feature-note">
+            <p className="eyebrow">Flujo</p>
+            <strong>Nombre, participantes, items, liquidación.</strong>
+            <p className="subtle">La app te guía por ese orden para que no te falte nada importante.</p>
+          </div>
+          <div className="card feature-note">
+            <p className="eyebrow">Ventaja</p>
+            <strong>Reparto claro incluso si la cuenta era caótica.</strong>
+            <p className="subtle">Luego podrás guardar amigos, usar pandillas y cerrar el ticket cuando esté resuelto.</p>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
